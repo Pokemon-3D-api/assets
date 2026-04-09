@@ -1,78 +1,74 @@
 # Pokémon 3D API — Assets
+This repository serves as the high-performance asset engine for the Pokémon 3D API. It features an automated Stateless Asset Pipeline that downloads, optimizes, and serves 3D Pokémon models with zero manual intervention.
 
-## Contributing
+## 🚀 The Automated Pipeline
+You don't need to optimize models manually. When you add an entry to the data source, the GitHub Action:
+1. **Downloads** the raw `.glb` from Sketchfab.
+2. **Optimizes** geometry using **Draco** compression.
+3. **Resizes** textures to 1024x1024.
+4. **Compresses** textures into **WebP** for lightning-fast web loading.
+5. **Prunes** repository history every 5 commits to keep the repo size tiny.
 
-We welcome contributions from the community! You can help by:
-
-1. **Adding new 3D models** of Pokémon.
-2. **Improving the user interface** and styling.
-3. **Fixing bugs** and optimizing the app for better performance.
-4. **Enhancing the code** with new features (like sorting Pokémon, filtering by type, etc.).
-5. **Improving the documentation** for easier understanding and navigation.
-
-### Steps to Contribute:
-
-1. **Fork the Repository**: Fork the repo to your GitHub account.
-2. **Clone your Fork**: Clone your fork to your local machine.
+## 🛠️ How to Contribute
+To add new models, you only need to modify `scripts/model_map.json`.
+**Step-by-Step:**
+1. **Fork** and **clone** the repository.
    ```bash
-   git clone https://github.com/Pokemon-3D-api/assets.git
+   git clone --filter=blob:none --sparse https://github.com/Pokemon-3D-api/assets.git
    ```
-3. **Create a Branch**: Create a new branch for your feature or bug fix.
    ```bash
-   git checkout -b add-new-pokemon-model
+   cd assets
    ```
-4. **Make Your Changes**: Add new Pokémon models in the models and within the folder according to pokemon form and implement any necessary changes.
-5. **Commit Your Changes**: Commit your changes with a meaningful message.
    ```bash
-   git commit -m "Added new Pokémon model named 'Pikachu'"
+   git sparse-checkout set scripts .github
    ```
-6. **Push to Your Fork**: Push your changes to your fork on GitHub.
-   ```bash
-   git push origin add-new-pokemon-model
-   ```
-7. **Create a Pull Request**: Create a pull request to the main repository, describing your changes.
+2. Open `scripts/model_map.json`.
+3. Add your new Pokémon object (see the format below).
+4. **Commit and Push**. The GitHub Action will handle the rest.
 
-## How to Add More Models
-
-To add new Pokémon models to the app, follow these steps:
-
-1.  **Find or Create a 3D Model:** Locate or create Pokémon 3D models in `.glb` format.
-2.  **Update the Data Source:** Add a new Pokémon object to your data source (e.g., `MergedOpt.json`) or database, following the JSON Response Structure outlined above.
-3.  **Host the Model:** Ensure the model is hosted and accessible via a URL.
-
-## Optimizing 3D Models
-
-To ensure optimal performance, particularly for web-based applications, it's crucial to optimize 3D models. This involves reducing file sizes and improving rendering efficiency.
-
-**Recommended Optimization Settings:**
-
-For the best balance of visual quality and performance, we recommend optimizing your `.glb` models with the following settings:
-
-- **Resolution:** Resize models to a maximum size of 1024x1024 pixels. This resolution provides good detail while keeping file sizes manageable.
-- **Geometry Compression:** Use Draco compression to reduce the size of the model's geometry without significantly impacting visual quality.
-- **Texture Compression:** Convert textures to WebP format, which offers excellent compression ratios and supports transparency.
-
-For more detailed information on using gltf-transform, refer to the official documentation: [gltf-transform](https://gltf-transform.dev/cli).
-
-### CLI Command for Optimization
-
-1.  Install `gltf-transform` globally:
-
-    ```bash
-    npm i -g @gltf-transform/cli
-    ```
-
-2.  Install `gltf-transform` as a dev dependency (optional):
-
-    ```bash
-    npm i @gltf-transform/cli --save-dev
-    ```
-
-3.  Use the following `gltf-transform` command to resize and optimize your `.glb` models:
-
-    ```bash
-    gltf-transform resize models/glb/regular/1.glb models/opt/regular/1.glb --width 1024 --height 1024 && gltf-transform optimize models/opt/regular/1.glb models/opt/regular/1.glb --compress draco --texture-compress webp
-    ```
+## 📄 JSON Data Structure
+The pipeline uses a specific JSON format to determine how to save and process your files. You only need to provide one entry per model.
+Format Breakdown:
+- `id`: (Required) The National Dex number.
+- `category`: (Required) The folder where the optimized file will live (e.g., `regular`, `shiny`, `alolan`).
+- `url`: (Required) The direct Sketchfab model URL.
+- `suffix`: (Optional) Use this for Gender differences (e.g., `-M`, `-F`). Results in `668-M.glb`.
+- `custom_name`: (Optional) Overwrites everything. Use this for forms or special names. Results in `rotom-wash.glb`.
+## Example `model_map.json` entry:
+```json
+[
+  {
+    "id": 1000,
+    "category": "regular",
+    "url": "https://sketchfab.com/3d-models/gholdengo-450f19056379446cb57716b726c39929"
+  },
+  {
+    "id": 668,
+    "category": "regular",
+    "suffix": "-M",
+    "url": "https://sketchfab.com/3d-models/pyroar-male-64d85834863c45668612187b545f49ce"
+  },
+  {
+    "id": 668,
+    "category": "regular",
+    "suffix": "-F",
+    "url": "https://sketchfab.com/3d-models/pyroar-female-54d85834863c45668612187b545f49cf"
+  },
+  {
+    "id": 479,
+    "category": "multi",
+    "custom_name": "rotom-wash",
+    "url": "https://sketchfab.com/3d-models/rotom-wash-56d85834863c45668612187b545f49ca"
+  },
+  {
+    "id": 25,
+    "category": "special",
+    "custom_name": "pikachu-ash-hat",
+    "url": "https://sketchfab.com/3d-models/pikachu-hat-86d85834863c45668612187b545f49cb"
+  }
+]
+```
+> Note: If you use `custom_name`, the `id` and `suffix` are ignored for the filename, but the `id` is still used by the internal script to track the Pokémon.
 
 ## Pokémon Categories and Counts
 
@@ -98,10 +94,12 @@ This app supports various Pokémon forms and categories. Below is a breakdown of
 
 ---
 
-## Check Model Animations
+## 🔍 Previewing Models
+To check if a model has animations before adding it to the JSON:
+1. Use the **[3D Preview](https://marketplace.visualstudio.com/items?itemName=mohitkumartoshniwal.3d-preview)** extension in VS Code.
+2. If animations exist, they will appear in the "Animations" dropdown within the viewer.
 
-To verify whether a model contains animations or to inspect its structure, you can use the **[3D Preview](https://marketplace.visualstudio.com/items?itemName=mohitkumartoshniwal.3d-preview)** extension in Visual Studio Code. This extension allows you to preview 3D models directly in the editor, making it easier to inspect and test your models.
-
-1. Upload your `.glb` or `.gltf` file to Visual Studio Code, or open it using Visual Studio Code.
-2. If the extension is set as the default, you can easily open the 3D model from the sidebar or by right-clicking the file and selecting **3D Preview**.
-3. If the model contains animations, they will appear in a dropdown menu; otherwise, no animations will be shown.
+## ⚖️ License & Credits
+- **Models**: All 3D assets are property of **Nintendo/Creatures Inc./GAME FREAK inc**.
+- **Optimization**: Powered by `gltf-transform`.
+- **Architecture**: Built with ❤️ by the [**Pokémon 3D API Organization**](https://github.com/Pokemon-3D-api).
